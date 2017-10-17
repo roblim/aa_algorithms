@@ -25,18 +25,20 @@ class RingBuffer
   # O(1)
   def pop
     el = @store[(@start_idx - 1) % @length]
-    @length - 1
+    @length -= 1
     el
   end
 
   # O(1) ammortized
   def push(val)
+    resize! if @length == @capacity
     if @length == 0
       @store[0] = val
+      @length = 1
+    else
+      @store[(@start_idx + @length) % @length] = val
       @length += 1
     end
-    @store[(@start_idx + @length) % @length] = val
-    @length += 1
     @store
   end
 
@@ -53,9 +55,19 @@ class RingBuffer
   attr_writer :length
 
   def check_index(index)
-    raise Exception, 'index out of bounds' if index + 1 > self.length
+    raise Exception, 'index out of bounds' if (index + 1) > self.length
   end
 
   def resize!
+    new_arr = StaticArray.new(@capacity * 2)
+    @capacity = @capacity * 2
+    idx = 0
+    count = 0
+    while count < @length
+      new_arr[idx] = @store[idx]
+      idx += 1
+      count += 1
+    end
+    @store = new_arr
   end
 end
